@@ -1,3 +1,5 @@
+# BGA2Editor
+
 Readme for BGA2Editor2 v1.0 by Cryptomancer
 
 INTRODUCTION
