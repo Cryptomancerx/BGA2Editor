@@ -5,7 +5,7 @@ Readme for BGA2Editor2 v1.0 by Cryptomancer
 INTRODUCTION:
 This is a saved game editor for Battlefleet Gothic: Armada 2. Currently it supports editing campaign saved games. It will be updated to support new factions and features as they're released. BGA2Editor is a purely Command Line Interface (CLI) application written in Python 3.7.1.  
 
-BGA2Editor is available as a Windows binary. Simply download BGAEditor.exe and you're good to go. No Python interpreter necessary.  
+BGA2Editor is available as a Windows binary. Simply download BGA2Editor.exe and you're good to go. No Python interpreter necessary.  
 
 FEATURES SUPPORTED:  
 Edit admiral level, renown, leadership, maximum fleet points, and global income.  
