@@ -14,9 +14,7 @@ INTERFACE:
 The interface is purely CLI. I don't know how to code a GUI and I have no interest in learning. I will not release a GUI for this editor so don't ask.  
 Input is done through a series of text prompts in the form of:  
 
-Number:Explanation
-or
-Property:Value
+Number:Explanation or Property:Value
 
 To select a given option enter everything to the left of the colon verbatim. This includes capitalization. If you see a property enclosed in parenthesis then it is displayed purely FYI and is not editable. For example:  
 
