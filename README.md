@@ -21,7 +21,7 @@ NOTE THAT THIS EDITOR DOES NOT CREATE BACKUPS OF YOUR SAVED GAMES SO TAKE MANUAL
 Saved games location: C:\Users\%USERNAME%\AppData\Local\BattleFleetGothic2\Saved\SaveGames  
 If you don't see the AppData folder then enable Show Hidden Folders in Folder Options.  
 
-CHANGELOG:
+CHANGELOG:  
 v1.1 - Added UpgradePoints, BattlePlans, HEALSHIPS!, and MAXSHIPS! commands.
 
 To compile BGA2Editor into a Windows binary you will need pyinstaller which can be installed via pip. Use the following command:  
