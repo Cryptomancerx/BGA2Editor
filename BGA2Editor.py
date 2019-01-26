@@ -1,7 +1,7 @@
 import sys, os, mmap
-
+#2:1000, 3:2500, 4:4500, 5:7000, 6:10000, 7:13500, 8:17500, 9:22000, 10:27000, 11:32500, 12:38500, 13:45500, 14:54500
 def Main():
-  print("Battlefleet Gothic: Armada 2 Saved Game Editor v1.0 by Cryptomancer\n")
+  print("Battlefleet Gothic: Armada 2 Saved Game Editor v1.1 by Cryptomancer\n")
 
   while True:
     print("1: Edit Campaign Save")
@@ -67,8 +67,11 @@ def BGAEdit(BGAProfilePath,isCampaign):
     ProfileMM.seek(5,os.SEEK_CUR)
     Leadership = int.from_bytes(ProfileMM.read(4),sys.byteorder)
     Income = int.from_bytes(ProfileMM.read(4),sys.byteorder)
+    UpgradePoints = int.from_bytes(ProfileMM.read(4),sys.byteorder)
     ProfileMM.seek(ProfileMM.find("Game_ProperNoun_GenericFleetName".encode())-12)
     FleetPoints = int.from_bytes(ProfileMM.read(4),sys.byteorder)
+    ProfileMM.seek(ProfileMM.find(b'\xD2\x02\x96\x49')+4) #No clue what this is, but it seems to provide the correct location
+    BattlePlans = int.from_bytes(ProfileMM.read(4),sys.byteorder)
 
     ProfileMM.seek(0)
 
@@ -80,7 +83,11 @@ def BGAEdit(BGAProfilePath,isCampaign):
     print("Leadership:",Leadership)
     print("FleetPoints:",FleetPoints)
     print("Income:",Income)
-    print("Back: Go Back")
+    print("UpgradePoints:",UpgradePoints)
+    print("BattlePlans:",BattlePlans)
+    print("HEALSHIPS!: Restores hull and crew values to max for all ships")
+    print("MAXSHIPS!: Raises level of all ships to 4")
+    print("\nBack: Go Back")
     EditProperty = input("\nSelect Property: "); print("")
 
     if (EditProperty == "Renown"):
@@ -99,6 +106,18 @@ def BGAEdit(BGAProfilePath,isCampaign):
       IncomeNew = int(input("Enter new income: ")); print("")
       ProfileMM.seek(CampaignOffset+17)
       ProfileMM.write(IncomeNew.to_bytes(4,sys.byteorder))
+    elif (EditProperty == "UpgradePoints"):
+      UpgradePointsNew = int(input("Enter new upgrade points: ")); print("")
+      ProfileMM.seek(CampaignOffset+21)
+      ProfileMM.write(UpgradePointsNew.to_bytes(4,sys.byteorder))
+    elif (EditProperty == "BattlePlans"):
+      BattlePlansNew = int(input("Enter new BattlePlans: ")); print("")
+      ProfileMM.seek(ProfileMM.find(b'\xD2\x02\x96\x49')+4)
+      ProfileMM.write(BattlePlansNew.to_bytes(4,sys.byteorder))
+    elif (EditProperty == "HEALSHIPS!"):
+      EditShips(ProfileMM, Faction,0)
+    elif (EditProperty == "MAXSHIPS!"):
+      EditShips(ProfileMM, Faction,1)
     elif (EditProperty == "Back"):
       break
     else:
@@ -106,6 +125,59 @@ def BGAEdit(BGAProfilePath,isCampaign):
       continue
 
   ProfileMM.flush()
+  return
+
+def EditShips(ProfileMM,Faction,Mode):
+  if (Faction == "Imperium"):
+    FindStrings = ["Imp_Escort", "Imp_Lightcruiser", "Imp_Cruiser", "Imp_Battlecruiser", "Imp_Grandcruiser", "Imp_Battleship", "SpaceMarines_Escort", "SpaceMarines_Lightcruiser", "SpaceMarines_Cruiser", "SpaceMarines_Battleship", "AdeptusMechanicus_Escort", "AdeptusMechanicus_Lightcruiser", "AdeptusMechanicus_Cruiser", "AdeptusMechanicus_Battleship"]
+    MaxHullValues = {"Cobra":200, "CobraWidowmaker":200, "Firestorm":400, "Sword":400, "Falchion":400}
+  elif (Faction == "Necron"):
+    FindStrings = ["Necron_Escort", "Necron_Lightcruiser", "Necron_Cruiser", "Necron_Battlecruiser", "Necron_Battleship"]
+    MaxHullValues = {"DirgeRaider":200, "Jackal":400, "Cartouche":800, "Shroud":800, "Khopesh":1200, "ScytheHarvester":1600, "ScytheReaper":2000, "Cairn":2400}
+  elif (Faction == "Tyranids"):
+    FindStrings = ["Tyranids_Escort", "Tyranids_Lightcruiser", "Tyranids_Cruiser", "Tyranids_Battlecruiser", "Tyranids_Battleship"]
+
+  for str in FindStrings:
+    ProfileMM.seek(0)
+    while True:
+      FindPos = ProfileMM.find(str.encode())
+      if (FindPos > 0):
+        ProfileMM.seek(FindPos-5)
+        ShipLevel = int.from_bytes(ProfileMM.read(1),sys.byteorder)
+        ShipTypeLen = int.from_bytes(ProfileMM.read(4),sys.byteorder)-len(str)-2
+        ProfileMM.seek(len(str)+1,os.SEEK_CUR)
+        ShipType = ProfileMM.read(ShipTypeLen).decode("utf-8")
+        ProfileMM.seek(17,os.SEEK_CUR)
+        if (ShipLevel > 0 and ProfileMM.read(7).decode("utf-8") != "[ERROR]"): #Limit to valid ships
+          if (Mode == 0): #HEAL!
+            if (Faction == "Imperium"):
+              if ("Escort" in str): MaxHull = MaxHullValues[ShipType]
+              elif ("Lightcruiser" in str): MaxHull = 1200
+              elif ("Cruiser" in str or "Battlecruiser" in str): MaxHull = 1600
+              elif ("Grandcruiser" in str): MaxHull = 2000
+              elif("Battleship" in str): MaxHull = 2400
+            elif (Faction == "Necron"):
+              MaxHull = MaxHullValues[ShipType]
+            elif (Faction == "Tyranids"):
+              if ("Drone" in ShipType or "Vanguard" in ShipType): MaxHull = 200
+              elif ("Kraken" in ShipType): MaxHull = 400
+              elif ("Cruiser" in str): MaxHull = 1200
+              elif ("Battlecruiser" in str): MaxHull = 1600
+              elif("Battleship" in str): MaxHull = 2000
+            ProfileMM.seek(FindPos+len(str)+ShipTypeLen+10)
+            ProfileMM.write(MaxHull.to_bytes(4,sys.byteorder))
+            ProfileMM.seek(int.from_bytes(ProfileMM.read(4),sys.byteorder)+4,os.SEEK_CUR)
+            MaxCrew = int.from_bytes(ProfileMM.read(4),sys.byteorder)
+            ProfileMM.seek(-8,os.SEEK_CUR)
+            ProfileMM.write(MaxCrew.to_bytes(4,sys.byteorder))
+            ProfileMM.seek(4,os.SEEK_CUR)
+            ProfileMM.write(int("2").to_bytes(4,sys.byteorder))
+          else: #MAX!
+            ProfileMM.seek(FindPos-5)
+            ProfileMM.write(int("4").to_bytes(1,sys.byteorder))
+        ProfileMM.seek(FindPos+6)
+      else:
+        break
   return
 
 if __name__ == "__main__":
